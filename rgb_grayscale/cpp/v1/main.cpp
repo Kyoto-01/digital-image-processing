@@ -14,7 +14,7 @@
 using namespace cv;
 
 int main() {
-    std::string imgPath = samples::findFile("../image.jpg");
+    std::string imgPath = samples::findFile("../../image.jpg");
 
     Mat imgBGR, imgGray, imgBGRPlanes[3];
 
