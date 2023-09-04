@@ -5,41 +5,64 @@ import cv2
 import numpy as np
 
 
-IMGS_DIR = 'imgs'
+INPUT_IMGS_DIR = 'input'
+OUTPUT_IMGS_DIR = 'output'
 
 
-# Função de Informação Espacial
-def spatial_info(img_grayscale):
-    sh = cv2.Sobel(img_grayscale, cv2.CV_64F, 1, 0, ksize=1)
-    sv = cv2.Sobel(img_grayscale, cv2.CV_64F, 0, 1, ksize=1)
+def get_spatial_info(imgSobel):
+    SI_mean = (
+        np.sum(imgSobel) / 
+        (imgSobel.shape[0] * imgSobel.shape[1])
+    )
 
-    SIr = np.sqrt(np.square(sh) + np.square(sv))
-
-    SI_mean = np.sum(SIr) / (SIr.shape[0] * SIr .shape[1])
     SI_stdev = np.sqrt(
-        np.sum(SIr ** 2 - SI_mean ** 2) / (SIr.shape[0] * SIr.shape[1]))
+        np.sum(imgSobel ** 2 - SI_mean ** 2) / 
+        (imgSobel.shape[0] * imgSobel.shape[1])
+    )
 
     return SI_stdev
 
 
+def get_sobel(imgGray):
+    hsobel = cv2.Sobel(imgGray, cv2.CV_64F, 1, 0, ksize=1)
+    vsobel = cv2.Sobel(imgGray, cv2.CV_64F, 0, 1, ksize=1)
+    sobel = np.sqrt(np.square(hsobel) + np.square(vsobel))
+
+    return (sobel, hsobel, vsobel)
+
+
 def main():
-    
     print('-' * 47)
     print(f'| {"Image".ljust(20)} | {"Spatial Information".ljust(20)} |')
     print('-' * 47)
 
-    for imgName in os.listdir(IMGS_DIR):
-        imgPath = cv2.samples.findFile(f'{IMGS_DIR}/{imgName}')
+    for imgName in os.listdir(INPUT_IMGS_DIR):
+        imgPath = cv2.samples.findFile(f'{INPUT_IMGS_DIR}/{imgName}')
         img = cv2.imread(imgPath, cv2.IMREAD_GRAYSCALE)
 
+        imgSobel, imgHsobel, imgVsobel = get_sobel(img)
+
         if img is not None:
-            imgSI = spatial_info(img)
+            imgSI = get_spatial_info(imgSobel)
+
             print(f'| {imgName.ljust(20)} | {str(imgSI).ljust(20)} |')
+
+            cv2.imwrite(
+                f'{OUTPUT_IMGS_DIR}/{imgName[:imgName.find(".")]}_hsobel{imgName[imgName.find("."):]}', 
+                imgHsobel
+            )
+
+            cv2.imwrite(
+                f'{OUTPUT_IMGS_DIR}/{imgName[:imgName.find(".")]}_vsobel{imgName[imgName.find("."):]}', 
+                imgVsobel
+            )
+
+            cv2.imwrite(
+                f'{OUTPUT_IMGS_DIR}/{imgName[:imgName.find(".")]}_sobel{imgName[imgName.find("."):]}', 
+                imgSobel
+            )
 
     print('-' * 47)
 
-    cv2.waitKey(0)
-
 
 main()
-input()
