@@ -37,11 +37,3 @@ def main():
     menu()
 
 main()
-
-smallImgPath = "images/dog_640x426.jpg"
-bigImgPath = "images/dog_6016x4000.jpg"
-
-img = cv2.imread(bigImgPath, cv2.IMREAD_COLOR)
-resizedImg = SpatialResolutionHandler(img).reduce_img(.2, .2)
-
-cv2.imwrite("resized.jpg", resizedImg)

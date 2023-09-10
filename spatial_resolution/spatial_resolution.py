@@ -8,14 +8,19 @@ class SpatialResolutionHandler:
 
     def __init__(
         self, 
-        img, 
+        img = None, 
         numChannels = 3,
         transformMethod = "mean", 
         neighborhoodType = "4"
     ):
         self.__img = img
-        self.__imgHeight = img.shape[0]
-        self.__imgWidth = img.shape[1]
+        self.__imgHeight = None
+        self.__imgWidth = None
+
+        if img is not None:
+            self.__imgHeight = img.shape[0]
+            self.__imgWidth = img.shape[1]
+
         self.__numChannels = numChannels
         self.__transformMethod = transformMethod    # mean | mode | median
         self.__neighborhoodType = neighborhoodType  # 4 | 8 | d
@@ -27,8 +32,29 @@ class SpatialResolutionHandler:
     @img.setter
     def img(self, value):
         self.__img = value
-        self.__imgHeight = value.shape[0]
-        self.__imgWidth = value.shape[1]
+        if value is not None:
+            self.__imgHeight = value.shape[0]
+            self.__imgWidth = value.shape[1]
+
+    @property
+    def numChannels(self):
+        return self.__numChannels
+    
+    @property
+    def transformMethod(self):
+        return self.__transformMethod
+    
+    @transformMethod.setter
+    def transformMethod(self, value):
+        self.__transformMethod = value
+
+    @property
+    def neighborhoodType(self):
+        return self.__neighborhoodType
+    
+    @neighborhoodType.setter
+    def neighborhoodType(self, value):
+        self.__neighborhoodType = value
 
     def get_neighborhood_diagonal(self, row, col, channel):
         topLeft = 0 if ((row - 1 < 0) or (col - 1 < 0)) else self.__img[row - 1, col - 1, channel]
@@ -136,20 +162,20 @@ class SpatialResolutionHandler:
         return resizedImg
 
     def reduce_img(self, scaleX, scaleY):
-        resizedImgHeight = int(self.__imgHeight * scaleY)
-        resizedImgWidth = int(self.__imgWidth * scaleX)
+        resizedImgHeight = int(self.__imgHeight / scaleY)
+        resizedImgWidth = int(self.__imgWidth / scaleX)
 
         resizedImg = np.zeros(
             shape=(resizedImgHeight, resizedImgWidth, self.__numChannels), 
             dtype=np.int32
         )
 
-        winHeight = int(self.__imgHeight / resizedImgHeight)
-        winWidth = int(self.__imgWidth / resizedImgWidth)
+        winHeight = self.__imgHeight / resizedImgHeight
+        winWidth = self.__imgWidth / resizedImgWidth
 
         for channel in range(self.__numChannels):
-            for row in range(0, self.__imgHeight, winHeight):
-                for col in range(0, self.__imgWidth, winWidth):
+            for row in range(0, self.__imgHeight, int(winHeight)):
+                for col in range(0, self.__imgWidth, int(winWidth)):
                     mean = self.transform_by_neighborhood(row, col, channel)
                     resizedImg[int(row / winHeight), int(col / winWidth), channel] = mean
 
