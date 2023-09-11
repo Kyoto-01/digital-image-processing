@@ -1,5 +1,4 @@
-#!/usr/bin/env python3
-
+import cv2
 import numpy as np
 import statistics
 
@@ -142,41 +141,59 @@ class SpatialResolutionHandler:
         return result
 
     def expand_img(self, scaleX, scaleY):
+        resizedImg = None
+
         resizedImgHeight = int(self.__imgHeight * scaleY)
         resizedImgWidth = int(self.__imgWidth * scaleX)
 
-        resizedImg = np.zeros(
-            shape=(resizedImgHeight, resizedImgWidth, self.__numChannels), 
-            dtype=np.int32
-        )
+        if self.__transformMethod in (cv2.INTER_LINEAR, cv2.INTER_CUBIC):
+            resizedImg = cv2.resize(
+                self.__img, 
+                (resizedImgWidth, resizedImgHeight), 
+                interpolation = self.__transformMethod
+            )
+        else:
+            resizedImg = np.zeros(
+                shape=(resizedImgHeight, resizedImgWidth, self.__numChannels), 
+                dtype=np.int32
+            )
 
-        for channel in range(self.__numChannels):
-            for row in range(self.__imgHeight):
-                for col in range(self.__imgWidth):
-                    mean = self.transform_by_neighborhood(row, col, channel)
-                    
-                    for winRow in range(scaleY):
-                        for winCol in range(scaleX):
-                            resizedImg[(row * scaleY) + winRow, (col * scaleX) + winCol, channel] = mean
+            for channel in range(self.__numChannels):
+                for row in range(self.__imgHeight):
+                    for col in range(self.__imgWidth):
+                        mean = self.transform_by_neighborhood(row, col, channel)
+                        
+                        for winRow in range(scaleY):
+                            for winCol in range(scaleX):
+                                resizedImg[(row * scaleY) + winRow, (col * scaleX) + winCol, channel] = mean
 
         return resizedImg
 
     def reduce_img(self, scaleX, scaleY):
+        resizedImg = None
+
         resizedImgHeight = int(self.__imgHeight / scaleY)
         resizedImgWidth = int(self.__imgWidth / scaleX)
+        
+        if self.__transformMethod in (cv2.INTER_LINEAR, cv2.INTER_CUBIC):
+            resizedImg = cv2.resize(
+                self.__img, 
+                (resizedImgWidth, resizedImgHeight), 
+                interpolation = self.__transformMethod
+            )
+        else:
+            resizedImg = np.zeros(
+                shape=(resizedImgHeight, resizedImgWidth, self.__numChannels), 
+                dtype=np.int32
+            )
 
-        resizedImg = np.zeros(
-            shape=(resizedImgHeight, resizedImgWidth, self.__numChannels), 
-            dtype=np.int32
-        )
+            winHeight = self.__imgHeight / resizedImgHeight
+            winWidth = self.__imgWidth / resizedImgWidth
 
-        winHeight = self.__imgHeight / resizedImgHeight
-        winWidth = self.__imgWidth / resizedImgWidth
-
-        for channel in range(self.__numChannels):
-            for row in range(0, self.__imgHeight, int(winHeight)):
-                for col in range(0, self.__imgWidth, int(winWidth)):
-                    mean = self.transform_by_neighborhood(row, col, channel)
-                    resizedImg[int(row / winHeight), int(col / winWidth), channel] = mean
+            for channel in range(self.__numChannels):
+                for row in range(0, self.__imgHeight, int(winHeight)):
+                    for col in range(0, self.__imgWidth, int(winWidth)):
+                        mean = self.transform_by_neighborhood(row, col, channel)
+                        resizedImg[int(row / winHeight), int(col / winWidth), channel] = mean
 
         return resizedImg

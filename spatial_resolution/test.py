@@ -61,13 +61,19 @@ for action in (("expand", SMALL_IMG_PATH), ("reduce", BIG_IMG_PATH)):
         srHandler.img = img
 
         for scale in ((2, 2), (3, 3), (4, 4), (5, 5)):
-            for method in ("mean", "mode", "median"):
+            for method in ("mean", "mode", "median", cv2.INTER_LINEAR, cv2.INTER_CUBIC):
                 srHandler.transformMethod = method
 
                 if action[0] == "expand":
                     resizedImg = srHandler.expand_img(scale[0], scale[1])
                 else:
                     resizedImg = srHandler.reduce_img(scale[0], scale[1])
+
+                method = (
+                    "cv2bilinear" if method == cv2.INTER_LINEAR 
+                    else "cv2bicubic" if method == cv2.INTER_CUBIC 
+                    else method
+                )
 
                 cv2.imwrite(
                     f"{OUTPUT_DIR}/img_{action[0]}_{scale[0]}x{scale[1]}_{method}.{imgExt}", 
